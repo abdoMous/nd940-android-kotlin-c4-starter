@@ -70,9 +70,6 @@ class RemindersActivity : AppCompatActivity() {
                 (nav_host_fragment as NavHostFragment).navController.popBackStack()
                 return true
             }
-            R.id.logout -> {
-                AuthUI.getInstance().signOut(this)
-            }
         }
         return super.onOptionsItemSelected(item)
     }

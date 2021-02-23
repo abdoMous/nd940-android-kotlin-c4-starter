@@ -4,8 +4,10 @@ import android.os.Build
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.getOrAwaitValue
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -13,6 +15,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -28,8 +31,13 @@ class RemindersListViewModelTest {
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
+    //@ExperimentalCoroutinesApi
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Before
     fun setupViewModel() {
+        stopKoin()
         dataSource = FakeDataSource()
         dataSource.reminders = createRemindersForTesting()
         remindersListViewModel = RemindersListViewModel(
@@ -53,7 +61,7 @@ class RemindersListViewModelTest {
     @Test
     fun loadReminders_loadingData()= runBlockingTest {
 
-        //Given - adding 3 reminders in setupViewModel function
+        //Given - adding 2 reminders in setupViewModel function
 
         // When - calling loadReminds
         remindersListViewModel.loadReminders()
@@ -63,9 +71,32 @@ class RemindersListViewModelTest {
     }
 
     @Test
+    fun loadReminders_LoadingNoData() = runBlockingTest {
+        // Givin - empty database
+        dataSource.deleteAllReminders()
+
+        // When - calling loadReminds
+        remindersListViewModel.loadReminders()
+
+        // Then - no data
+        assert(remindersListViewModel.remindersList.value?.size == 0)
+    }
+
+    @Test
+    fun loadReminders_hasError_returnError(){
+        // Giving - repo with 2 reminders
+        dataSource.setReturnError(true)
+        // When -
+        remindersListViewModel.loadReminders()
+        // Then -
+        val error = remindersListViewModel.showSnackBar.getOrAwaitValue()
+        assert(error.contains("Exception"))
+    }
+
+    @Test
     fun invalidateShowNoData_noData_UpdateShowNoDataValue() = runBlockingTest {
 
-        // Given - repo with 3 reminders
+        // Given - repo with 2 reminders
 
         // When - remove all reminders
         dataSource.deleteAllReminders()
@@ -74,6 +105,22 @@ class RemindersListViewModelTest {
         // Then - showNoData should be true
         assert(remindersListViewModel.showNoData.value!!)
 
+    }
+
+    @Test
+    fun showLoading_() {
+        // Given - repo with 2 reminders
+        mainCoroutineRule.pauseDispatcher()
+
+        // When - loading reminders
+        remindersListViewModel.loadReminders()
+
+        // Then - show loading
+        assert(remindersListViewModel.showLoading.getOrAwaitValue() == true)
+
+        // Then - hide loading
+        mainCoroutineRule.resumeDispatcher()
+        assert(remindersListViewModel.showLoading.getOrAwaitValue() == false)
     }
 
 }

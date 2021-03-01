@@ -13,6 +13,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi;
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -47,18 +48,21 @@ class RemindersDaoTest {
 
     @Test
     @Throws(Exception::class)
-    suspend fun writeReminderAndReadInList(){
+    fun writeReminderAndReadInList(){
         val reminderId = UUID.randomUUID().toString()
 
         val reminder = ReminderDTO("Call a friend","calling ...",
                 "Parc de La Victoire",
                 36.74208242672705,3.072958588600159,
                 reminderId)
+        var reminderTitle :String? = ""
+        runBlocking {
+            remindersDao.saveReminder(reminder)
 
-        remindersDao.saveReminder(reminder)
-        val reminderTitle = remindersDao.getReminderById(reminderId)?.title
-
+            reminderTitle = remindersDao.getReminderById(reminderId)?.title
+        }
         assertThat(reminderTitle, equalTo("Call a friend"))
+
     }
 
 }

@@ -28,7 +28,9 @@ import java.util.*
 @SmallTest
 class RemindersDaoTest {
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+
     private lateinit var remindersDao: RemindersDao
     private lateinit var db: RemindersDatabase
 
@@ -48,20 +50,27 @@ class RemindersDaoTest {
 
     @Test
     @Throws(Exception::class)
-    fun writeReminderAndReadInList(){
-        val reminderId = UUID.randomUUID().toString()
+    fun insertReminderAndGetById() = runBlockingTest{
+        // GIVEN - insert a reminder
 
+        val reminderId = UUID.randomUUID().toString()
         val reminder = ReminderDTO("Call a friend","calling ...",
                 "Parc de La Victoire",
                 36.74208242672705,3.072958588600159,
                 reminderId)
-        var reminderTitle :String? = ""
-        runBlocking {
-            remindersDao.saveReminder(reminder)
 
-            reminderTitle = remindersDao.getReminderById(reminderId)?.title
-        }
-        assertThat(reminderTitle, equalTo("Call a friend"))
+        remindersDao.saveReminder(reminder)
+
+        // WHEN - Get the reminder by id from the database
+        val loaded = remindersDao.getReminderById(reminderId)
+
+        // THEN - The loaded data contains the expected values
+        assertThat(loaded as ReminderDTO, notNullValue())
+        assertThat(loaded.id, `is`(reminder.id))
+        assertThat(loaded.title, `is`(reminder.title))
+        assertThat(loaded.description, `is`(reminder.description))
+        assertThat(loaded.latitude, `is`(reminder.latitude))
+        assertThat(loaded.longitude, `is`(reminder.longitude))
 
     }
 

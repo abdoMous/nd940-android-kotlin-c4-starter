@@ -1,16 +1,27 @@
 package com.udacity.project4
 
 import android.app.Application
+import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -67,5 +78,37 @@ class RemindersActivityTest :
 
 
 //    TODO: add End to End testing to the app
+    @Test
+    fun addReminder_showReminder() = runBlocking {
+
+        // Set initial state
+        val reminder = ReminderDTO("Call a friend","calling ...",
+            "Parc de La Victoire",
+            36.74208242672705,3.072958588600159)
+
+        repository.saveReminder(reminder)
+
+        //Start up Tasks screen
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderTitle)).perform(replaceText("NEW TITLE"))
+        onView(withId(R.id.reminderDescription)).perform(replaceText("NEW DESCRIPTION"))
+
+        onView(withId(R.id.selectLocation)).perform(click())
+
+        onView(withId(R.id.map)).perform(click())
+        onView(withId(R.id.map)).perform(click())
+        onView(withId(R.id.saveButton)).perform(click())
+
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        onView(withText("NEW TITLE")).check(matches(isDisplayed()))
+        onView(withText("NEW DESCRIPTION")).check(matches(isDisplayed()))
+
+        // Make sure the activity is closed before the db
+        activityScenario.close()
+
+    }
 
 }

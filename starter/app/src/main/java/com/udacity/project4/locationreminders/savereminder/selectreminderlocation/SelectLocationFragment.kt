@@ -10,6 +10,7 @@ import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -63,9 +64,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
         val poi2 = _viewModel.selectedPOI.value
-        _viewModel.reminderSelectedLocationStr.value = poi2?.name
-        _viewModel.latitude.value = poi2?.latLng?.latitude
-        _viewModel.longitude.value = poi2?.latLng?.longitude
+
+        if(poi2 != null){
+            _viewModel.reminderSelectedLocationStr.value = poi2.name
+            _viewModel.latitude.value = poi2.latLng?.latitude
+            _viewModel.longitude.value = poi2.latLng?.longitude
+        }
+
         _viewModel.navigationCommand.value =
                 NavigationCommand.Back
     }
@@ -110,8 +115,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 //        map.addGroundOverlay(androidOverlay)
 //        setMapLongClick(map)
         setPoiClick(map)
+        setMapClick(map)
         setMapStyle(map)
         enableMyLocation()
+    }
+
+    private fun setMapClick(map: GoogleMap) {
+        map.setOnMapClickListener {
+            run {
+                _viewModel.latitude.value = it.latitude
+                _viewModel.longitude.value = it.longitude
+                _viewModel.reminderSelectedLocationStr.value = "location"
+                map.addMarker(MarkerOptions().position(it))
+            }
+        }
     }
 
     private fun setPoiClick(map: GoogleMap) {

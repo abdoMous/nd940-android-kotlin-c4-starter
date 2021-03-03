@@ -71,6 +71,69 @@ class RemindersDaoTest {
         assertThat(loaded.description, `is`(reminder.description))
         assertThat(loaded.latitude, `is`(reminder.latitude))
         assertThat(loaded.longitude, `is`(reminder.longitude))
+    }
+
+    @Test
+    fun getReminders_success() = runBlockingTest {
+        // GIVING - insert three reminders
+        val r1 = ReminderDTO("t1","d1",
+                "l1",
+                36.74208242672705,3.072958588600159)
+
+        val r2 = ReminderDTO("t2","d2",
+                "l2",
+                36.74208242672705,3.072958588600159)
+
+        val r3 = ReminderDTO("t3","d3",
+                "l3",
+                36.74208242672705,3.072958588600159)
+
+        remindersDao.saveReminder(r1)
+        remindersDao.saveReminder(r2)
+        remindersDao.saveReminder(r3)
+
+        // WHEN - get all reminders from the database
+        val loadedReminders = remindersDao.getReminders()
+
+        // THEN - check loaded data have the correct count
+        assertThat(loadedReminders.count(), `is`(3))
+
+        assertThat(loadedReminders.first().title, `is`(r1.title))
+        assertThat(loadedReminders.first().description, `is`(r1.description))
+        assertThat(loadedReminders.first().location, `is`(r1.location))
+
+        assertThat(loadedReminders.last().title, `is`(r3.title))
+        assertThat(loadedReminders.last().description, `is`(r3.description))
+        assertThat(loadedReminders.last().location, `is`(r3.location))
+
+    }
+
+    @Test
+    fun deleteAllReminders_success() = runBlockingTest {
+        // GIVING - insert three reminders
+        val r1 = ReminderDTO("t1","d1",
+                "l1",
+                36.74208242672705,3.072958588600159)
+
+        val r2 = ReminderDTO("t2","d2",
+                "l2",
+                36.74208242672705,3.072958588600159)
+
+        val r3 = ReminderDTO("t3","d3",
+                "l3",
+                36.74208242672705,3.072958588600159)
+
+        remindersDao.saveReminder(r1)
+        remindersDao.saveReminder(r2)
+        remindersDao.saveReminder(r3)
+
+
+        // WHEN - delete all reminders
+        remindersDao.deleteAllReminders()
+        val loadedReminders = remindersDao.getReminders()
+
+        // THEN - check the database is empty
+        assertThat(loadedReminders.count(), `is`(0))
 
     }
 

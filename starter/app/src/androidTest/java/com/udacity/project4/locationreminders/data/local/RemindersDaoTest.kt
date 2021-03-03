@@ -63,6 +63,7 @@ class RemindersDaoTest {
 
         // WHEN - Get the reminder by id from the database
         val loaded = remindersDao.getReminderById(reminderId)
+        val loadedFromRandomId = remindersDao.getReminderById(UUID.randomUUID().toString())
 
         // THEN - The loaded data contains the expected values
         assertThat(loaded as ReminderDTO, notNullValue())
@@ -71,6 +72,8 @@ class RemindersDaoTest {
         assertThat(loaded.description, `is`(reminder.description))
         assertThat(loaded.latitude, `is`(reminder.latitude))
         assertThat(loaded.longitude, `is`(reminder.longitude))
+
+        assertThat(loadedFromRandomId, `is`(nullValue()))
     }
 
     @Test
